@@ -7,10 +7,9 @@ package db
 
 import (
 	"context"
-	"database/sql"
 )
 
-const createEntery = `-- name: CreateEntery :one
+const createEntry = `-- name: CreateEntry :one
 INSERT INTO enteries (
   account_id,
   amount
@@ -19,13 +18,13 @@ INSERT INTO enteries (
 ) RETURNING id, account_id, amount, created_at
 `
 
-type CreateEnteryParams struct {
-	AccountID sql.NullInt64 `json:"account_id"`
-	Amount    int64         `json:"amount"`
+type CreateEntryParams struct {
+	AccountID int64 `json:"account_id"`
+	Amount    int64 `json:"amount"`
 }
 
-func (q *Queries) CreateEntery(ctx context.Context, arg CreateEnteryParams) (Entery, error) {
-	row := q.db.QueryRowContext(ctx, createEntery, arg.AccountID, arg.Amount)
+func (q *Queries) CreateEntry(ctx context.Context, arg CreateEntryParams) (Entery, error) {
+	row := q.db.QueryRowContext(ctx, createEntry, arg.AccountID, arg.Amount)
 	var i Entery
 	err := row.Scan(
 		&i.ID,
@@ -36,23 +35,13 @@ func (q *Queries) CreateEntery(ctx context.Context, arg CreateEnteryParams) (Ent
 	return i, err
 }
 
-const deleteEntery = `-- name: DeleteEntery :exec
-DELETE FROM enteries
-WHERE id = $1
-`
-
-func (q *Queries) DeleteEntery(ctx context.Context, id int64) error {
-	_, err := q.db.ExecContext(ctx, deleteEntery, id)
-	return err
-}
-
-const getEntery = `-- name: GetEntery :one
+const getEntry = `-- name: GetEntry :one
 SELECT id, account_id, amount, created_at FROM enteries
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetEntery(ctx context.Context, id int64) (Entery, error) {
-	row := q.db.QueryRowContext(ctx, getEntery, id)
+func (q *Queries) GetEntry(ctx context.Context, id int64) (Entery, error) {
+	row := q.db.QueryRowContext(ctx, getEntry, id)
 	var i Entery
 	err := row.Scan(
 		&i.ID,
@@ -63,20 +52,22 @@ func (q *Queries) GetEntery(ctx context.Context, id int64) (Entery, error) {
 	return i, err
 }
 
-const listEnteries = `-- name: ListEnteries :many
+const listEntries = `-- name: ListEntries :many
 SELECT id, account_id, amount, created_at FROM enteries
+WHERE account_id = $1
 ORDER BY id
-LIMIT $1
-OFFSET $2
+LIMIT $2
+OFFSET $3
 `
 
-type ListEnteriesParams struct {
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
+type ListEntriesParams struct {
+	AccountID int64 `json:"account_id"`
+	Limit     int32 `json:"limit"`
+	Offset    int32 `json:"offset"`
 }
 
-func (q *Queries) ListEnteries(ctx context.Context, arg ListEnteriesParams) ([]Entery, error) {
-	rows, err := q.db.QueryContext(ctx, listEnteries, arg.Limit, arg.Offset)
+func (q *Queries) ListEntries(ctx context.Context, arg ListEntriesParams) ([]Entery, error) {
+	rows, err := q.db.QueryContext(ctx, listEntries, arg.AccountID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -101,21 +92,4 @@ func (q *Queries) ListEnteries(ctx context.Context, arg ListEnteriesParams) ([]E
 		return nil, err
 	}
 	return items, nil
-}
-
-const updateEntery = `-- name: UpdateEntery :exec
-UPDATE enteries
-SET amount = $2
-WHERE id = $1
-RETURNING id, account_id, amount, created_at
-`
-
-type UpdateEnteryParams struct {
-	ID     int64 `json:"id"`
-	Amount int64 `json:"amount"`
-}
-
-func (q *Queries) UpdateEntery(ctx context.Context, arg UpdateEnteryParams) error {
-	_, err := q.db.ExecContext(ctx, updateEntery, arg.ID, arg.Amount)
-	return err
 }

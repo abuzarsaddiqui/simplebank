@@ -1,4 +1,4 @@
--- name: CreateEntery :one
+-- name: CreateEntry :one
 INSERT INTO enteries (
   account_id,
   amount
@@ -6,22 +6,13 @@ INSERT INTO enteries (
   $1, $2
 ) RETURNING *;
 
--- name: GetEntery :one
+-- name: GetEntry :one
 SELECT * FROM enteries
 WHERE id = $1 LIMIT 1;
 
--- name: ListEnteries :many
+-- name: ListEntries :many
 SELECT * FROM enteries
+WHERE account_id = $1
 ORDER BY id
-LIMIT $1
-OFFSET $2;
-
--- name: UpdateEntery :exec
-UPDATE enteries
-SET amount = $2
-WHERE id = $1
-RETURNING *;
-
--- name: DeleteEntery :exec
-DELETE FROM enteries
-WHERE id = $1;
+LIMIT $2
+OFFSET $3;

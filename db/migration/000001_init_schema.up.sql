@@ -33,6 +33,12 @@ COMMENT ON COLUMN "enteries"."amount" IS 'can be negative or positive';
 
 COMMENT ON COLUMN "transfers"."amount" IS 'must be positive';
 
+ALTER TABLE enteries ALTER COLUMN account_id set not null;
+
+ALTER TABLE transfers ALTER COLUMN from_account_id set not null;
+
+ALTER TABLE transfers ALTER COLUMN to_account_id set not null;
+
 ALTER TABLE "enteries" ADD FOREIGN KEY ("account_id") REFERENCES "accounts" ("id");
 
 ALTER TABLE "transfers" ADD FOREIGN KEY ("from_account_id") REFERENCES "accounts" ("id");
